@@ -1,142 +1,236 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fa">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        #chat-container {
-            width: 350px;
-            max-width: 90%;
-            background: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-        }
-
-        #chatbox {
-            border-top-left-radius: 8px;
-            border-top-right-radius: 8px;
-            border: 1px solid #ddd;
-            padding: 15px;
-            flex: 1;
-            overflow-y: auto;
-            background-color: #fafafa;
-            height: 400px;
-        }
-
-        #messages {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .message {
-            margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 8px;
-            max-width: 80%;
-        }
-
-        .message.user {
-            align-self: flex-end;
-            background-color: #e0f7fa;
-        }
-
-        .message.bot {
-            align-self: flex-start;
-            background-color: #e8eaf6;
-        }
-
-        #chat-form {
-            display: flex;
-            border-top: 1px solid #ddd;
-        }
-
-        #message {
-            flex: 1;
-            border: none;
-            padding: 10px;
-            border-bottom-left-radius: 8px;
-            font-size: 14px;
-            outline: none;
-        }
-
-        #send {
-            background-color: #3498db;
-            color: #ffffff;
-            border: none;
-            padding: 10px;
-            border-bottom-right-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.3s ease;
-        }
-
-        #send:hover {
-            background-color: #2980b9;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chatbot</title>
+  <!-- Marked.js برای رندر کردن Markdown -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- Highlight.js برای هایلایت کد -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f7f7f7;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      height: 100vh;
+      direction: rtl;
+    }
+    /* استایل Sidebar */
+    #sidebar {
+      width: 250px;
+      background: #2c3e50;
+      color: #fff;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    #sidebar h3 {
+      margin-top: 0;
+      text-align: center;
+    }
+    .chat-session {
+      padding: 10px;
+      background: #34495e;
+      margin-bottom: 8px;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.2s;
+    }
+    .chat-session:hover {
+      background: #1abc9c;
+    }
+    /* استایل بخش چت */
+    #chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      max-width: 800px;
+      margin: auto;
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+    #chat-header {
+      background-color: #3498db;
+      color: #fff;
+      padding: 15px;
+      text-align: center;
+      font-size: 20px;
+    }
+    #chatbox {
+      padding: 20px;
+      flex: 1;
+      overflow-y: auto;
+      background-color: #f7f7f7;
+    }
+    #messages {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .message {
+      max-width: 70%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      position: relative;
+      line-height: 1.5;
+      font-size: 15px;
+      word-wrap: break-word;
+    }
+    .message.user {
+      align-self: flex-end;
+      background-color: #dcf8c6; /* رنگ سبز کمرنگ */
+    }
+    .message.bot {
+      align-self: flex-start;
+      background-color: #fff;
+      border: 1px solid #e5e5ea;
+    }
+    /* استایل برای رندر Markdown و کدها */
+    pre {
+      background: #f6f8fa;
+      border: 1px solid #e1e4e8;
+      border-radius: 6px;
+      padding: 16px;
+      overflow-x: auto;
+    }
+    code {
+      background: #f6f8fa;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+    /* استایل فرم چت */
+    #chat-form {
+      display: flex;
+      border-top: 1px solid #ddd;
+    }
+    #message {
+      flex: 1;
+      border: none;
+      padding: 12px;
+      font-size: 15px;
+      outline: none;
+    }
+    #send {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      cursor: pointer;
+      font-size: 15px;
+      transition: background 0.2s;
+    }
+    #send:hover {
+      background-color: #2980b9;
+    }
+  </style>
 </head>
 <body>
-    <div id="chat-container">
-        <h2 style="text-align: center; padding: 15px; margin: 0; background-color: #3498db; color: #ffffff; border-top-left-radius: 8px; border-top-right-radius: 8px;">Chatbot</h2>
-        <div id="chatbox">
-            <div id="messages"></div>
-        </div>
-        <form id="chat-form">
-            <input type="text" id="message" placeholder="Type your message..." required>
-            <button type="submit" id="send">Send</button>
-        </form>
+  <div id="sidebar">
+    <h3>گفتگوهای اخیر</h3>
+    {% for session in recent_sessions %}
+      <div class="chat-session" onclick="loadChatHistory('{{ session.chat_date }}')">
+        {{ session.chat_date }}
+      </div>
+    {% endfor %}
+  </div>
+
+  <div id="chat-container">
+    <div id="chat-header">Chatbot</div>
+    <div id="chatbox">
+      <div id="messages"></div>
     </div>
+    <form id="chat-form">
+      <input type="text" id="message" placeholder="پیام خود را وارد کنید..." required>
+      <button type="submit" id="send">ارسال</button>
+    </form>
+  </div>
 
-    <script>
-        document.getElementById('chat-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            var message = document.getElementById('message').value;
-            var chatbox = document.getElementById('chatbox');
-            var messagesDiv = document.getElementById('messages');
-            
-            // Display user's message
-            var userMessageDiv = document.createElement('div');
-            userMessageDiv.className = 'message user';
-            userMessageDiv.innerHTML = '<b>You:</b> ' + message;
-            messagesDiv.appendChild(userMessageDiv);
+  <script>
+    // تنظیم Marked.js برای استفاده از Highlight.js در بلوک‌های کد
+    marked.setOptions({
+      highlight: function(code, lang) {
+        if (lang && hljs.getLanguage(lang)) {
+          return hljs.highlight(code, { language: lang }).value;
+        }
+        return hljs.highlightAuto(code).value;
+      },
+      breaks: true
+    });
 
-            // Scroll to the bottom of the chatbox
-            chatbox.scrollTop = chatbox.scrollHeight;
+    // به‌روزرسانی هایلایت کدهای داخل پیام‌ها
+    function updateHighlighting() {
+      document.querySelectorAll('pre code').forEach((block) => {
+        hljs.highlightElement(block);
+      });
+    }
 
-            // Send message to server
-            fetch('/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: 'message=' + encodeURIComponent(message)
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Display chatbot's response
-                var botMessageDiv = document.createElement('div');
-                botMessageDiv.className = 'message bot';
-                botMessageDiv.innerHTML = '<b>Bot:</b> ' + data.response;
-                messagesDiv.appendChild(botMessageDiv);
+    // ارسال پیام جدید
+    document.getElementById('chat-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      var messageInput = document.getElementById('message');
+      var message = messageInput.value;
+      var chatbox = document.getElementById('chatbox');
+      var messagesDiv = document.getElementById('messages');
 
-                // Scroll to the bottom of the chatbox
-                chatbox.scrollTop = chatbox.scrollHeight;
-            });
+      // رندر پیام کاربر به صورت Markdown (با امکان داشتن کد)
+      var userMessageDiv = document.createElement('div');
+      userMessageDiv.className = 'message user';
+      userMessageDiv.innerHTML = '<b>🙂 شما:</b><br>' + marked.parse(message);
+      messagesDiv.appendChild(userMessageDiv);
+      chatbox.scrollTop = chatbox.scrollHeight;
 
-            document.getElementById('message').value = '';
+      // ارسال پیام به سرور
+      fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'message=' + encodeURIComponent(message)
+      })
+      .then(response => response.json())
+      .then(data => {
+        var botMessageDiv = document.createElement('div');
+        botMessageDiv.className = 'message bot';
+        botMessageDiv.innerHTML = '<b>🤖 ربات:</b><br>' + marked.parse(data.response);
+        messagesDiv.appendChild(botMessageDiv);
+        chatbox.scrollTop = chatbox.scrollHeight;
+        updateHighlighting();
+      })
+      .catch(err => console.error(err));
+
+      messageInput.value = '';
+    });
+
+    // بارگذاری تاریخچه گفتگو برای یک جلسه مشخص (براساس تاریخ)
+    function loadChatHistory(date) {
+      fetch('/chat/history/' + date)
+      .then(response => response.json())
+      .then(data => {
+        var messagesDiv = document.getElementById('messages');
+        messagesDiv.innerHTML = ''; // پاک کردن پیام‌های قبلی
+
+        data.history.forEach(chat => {
+          var userMessageDiv = document.createElement('div');
+          userMessageDiv.className = 'message user';
+          userMessageDiv.innerHTML = '<b>🙂 شما:</b><br>' + marked.parse(chat.message);
+          messagesDiv.appendChild(userMessageDiv);
+
+          var botMessageDiv = document.createElement('div');
+          botMessageDiv.className = 'message bot';
+          botMessageDiv.innerHTML = '<b>🤖 ربات:</b><br>' + marked.parse(chat.response);
+          messagesDiv.appendChild(botMessageDiv);
         });
-    </script>
+        var chatbox = document.getElementById('chatbox');
+        chatbox.scrollTop = chatbox.scrollHeight;
+        updateHighlighting();
+      })
+      .catch(err => console.error(err));
+    }
+  </script>
 </body>
 </html>

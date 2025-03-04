@@ -2,6 +2,11 @@ from flask import Flask, request, redirect, url_for, render_template, session, f
 import sqlite3
 import bcrypt
 from deepseek import deepseek
+import markdown
+
+
+
+
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -30,6 +35,13 @@ def init_db():
                         username TEXT UNIQUE NOT NULL,
                         password TEXT NOT NULL
                       )''')
+        db.execute('''CREATE TABLE IF NOT EXISTS chats (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        username TEXT NOT NULL,
+                        message TEXT NOT NULL,
+                        response TEXT NOT NULL,
+                        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+                      )''')
         db.commit()
 
 @app.route('/')
@@ -53,7 +65,6 @@ def register():
             flash('Username already taken. Please log in.')
             return redirect(url_for('login'))
 
-        # Hash the password before storing it
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
         try:
@@ -94,18 +105,50 @@ def chat():
     if 'username' not in session:
         return redirect(url_for('login'))
     
+    db = get_db()
+
+    # Get distinct timestamps for chat sessions
+    recent_sessions = db.execute('''
+        SELECT DISTINCT DATE(timestamp) as chat_date 
+        FROM chats 
+        WHERE username = ? 
+        ORDER BY timestamp DESC 
+        LIMIT 10
+    ''', (session['username'],)).fetchall()
+
     if request.method == 'POST':
         user_input = request.form['message']
         bot_response = chatbot_response(user_input)
+
+        db.execute('INSERT INTO chats (username, message, response) VALUES (?, ?, ?)',
+                   (session['username'], user_input, bot_response))
+        db.commit()
+
         return jsonify({'response': bot_response})
-    
-    return render_template('chat.html')
+
+    return render_template('chat.html', recent_sessions=recent_sessions)
+
+# Fetch chat history for a specific date
+@app.route('/chat/history/<date>', methods=['GET'])
+def chat_history(date):
+    if 'username' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    db = get_db()
+    chat_history = db.execute('''
+        SELECT message, response, timestamp 
+        FROM chats 
+        WHERE username = ? AND DATE(timestamp) = ?
+        ORDER BY timestamp ASC
+    ''', (session['username'], date)).fetchall()
+
+    return jsonify({'history': [dict(row) for row in chat_history]})
+
 
 def chatbot_response(user_input):
     respond = model.get_message(user_input)
-    return respond
+    return markdown.markdown(respond)
 
 if __name__ == '__main__':
     init_db()
     app.run(host="0.0.0.0", port=9090, debug=True)
-

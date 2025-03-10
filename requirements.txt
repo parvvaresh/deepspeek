@@ -1,4 +1,4 @@
 Flask==2.2.5
 bcrypt==4.0.1
-sqlite3==3.36.0
 ollama==0.1.0
+pysqlite3
